@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asisten Aksi Perubahan P3K (dengan Opsi 'Cari Lagi')</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f9;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #0056b3;
+            border-bottom: 2px solid #eef2f5;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        h2 { margin-top: 30px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; }
+        input[type="text"], select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        
+        .main-button, .secondary-button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
+        .main-button { background-color: #007bff; color: white; }
+        .main-button:hover { background-color: #0056b3; }
+        .main-button:disabled, .secondary-button:disabled { background-color: #6c757d; cursor: not-allowed; }
+        .secondary-button { background-color: #f0f0f0; color: #333; border: 1px solid #ccc; font-size: 16px; padding: 12px; }
+        .secondary-button:hover { background-color: #e2e6ea; }
+        .button-group { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+
+        .choice-container h3 { text-align: center; }
+        .choice-item {
+            border: 2px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .choice-item:hover { border-color: #007bff; background-color: #f8f9fa; }
+        .choice-item.selected { border-color: #28a745; background-color: #e9f5ec; }
+        .choice-item strong { display: block; font-size: 1.1em; color: #0056b3; margin-bottom: 5px; }
+        .choice-item p { margin: 0; }
+        .choice-item .dampak { font-style: italic; color: #555; font-size: 0.9em; margin-top: 8px; }
+
+        .loader { text-align: center; padding: 20px; font-style: italic; color: #666; }
+        #hasilContainer { margin-top: 40px; background-color: #eef2f5; border-left: 5px solid #007bff; padding: 20px; border-radius: 5px; }
+        #hasilProposal { white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', Courier, monospace; font-size: 15px; background-color: #fff; padding: 15px; border-radius: 5px; border: 1px solid #ddd; }
+        #copyBtn { float: right; background-color: #28a745; color: white; border: none; padding: 8px 15px; font-size: 14px; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Asisten Interaktif Aksi Perubahan P3K</h1>
+        
+        <!-- TAHAP 1: DEFINISIKAN KONTEKS TUGAS -->
+        <div id="tahap1_konteks_tugas">
+            <h2>Langkah 1: Lengkapi Identitas & Konteks Tugas Anda</h2>
+            <form id="formTahap1">
+                <div class="form-group">
+                    <label for="namaPenyusun">Nama Lengkap</label>
+                    <input type="text" id="namaPenyusun" placeholder="Masukkan nama lengkap Anda" required>
+                </div>
+                <div class="form-group">
+                    <label for="nipPenyusun">NIP P3K (Opsional)</label>
+                    <input type="text" id="nipPenyusun" placeholder="Masukkan NIP P3K jika ada">
+                </div>
+                <div class="form-group">
+                    <label for="jabatanSpesifik">Jabatan Spesifik</label>
+                    <input type="text" id="jabatanSpesifik" placeholder="Contoh: Guru Ahli Pertama - Matematika, Perawat Terampil" required>
+                </div>
+                <div class="form-group">
+                    <label for="tingkatInstansi">Tingkat Instansi</label>
+                    <select id="tingkatInstansi">
+                        <option value="Desa/Kelurahan">Desa / Kelurahan</option>
+                        <option value="Kecamatan">Kecamatan</option>
+                        <option value="Kabupaten/Kota">Kabupaten / Kota</option>
+                        <option value="Provinsi">Provinsi</option>
+                        <option value="Pusat">Pusat</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="namaInstansi">Nama Instansi / Tempat Tugas</label>
+                    <input type="text" id="namaInstansi" placeholder="Contoh: Puskesmas Cigugur, Dinas Pendidikan Kuningan" required>
+                </div>
+                <button type="submit" id="cariMasalahBtn" class="main-button">Tampilkan Masalah yang Relevan</button>
+            </form>
+        </div>
+
+        <!-- TAHAP 2: PILIH MASALAH DARI AI -->
+        <div id="tahap2_pilih_masalah" class="choice-container" style="display: none;">
+            <h3>Langkah 2: Pilih Masalah yang Paling Sesuai</h3>
+            <div id="ideMasalahContainer"></div>
+            <div class="button-group">
+                <button id="pilihMasalahBtn" class="main-button" disabled>Lanjutkan dengan Masalah Ini</button>
+                <button id="cariMasalahLainBtn" class="secondary-button">Cari Ide Masalah Lain</button>
+            </div>
+        </div>
+
+        <!-- TAHAP 3: PILIH SOLUSI DARI AI -->
+        <div id="tahap3_pilih_solusi" class="choice-container" style="display: none;">
+            <h3>Langkah 3: AI Menyarankan Solusi, Pilih Satu</h3>
+            <div id="ideSolusiContainer"></div>
+             <div class="button-group">
+                <button id="pilihSolusiBtn" class="main-button" disabled>Uraikan Rencana untuk Solusi Ini</button>
+                <button id="cariSolusiLainBtn" class="secondary-button">Cari Ide Solusi Lain</button>
+            </div>
+        </div>
+        
+        <!-- TAHAP 4: HASIL AKHIR -->
+        <div id="hasilContainer" style="display: none;">
+            <h2>Draf Proposal Anda <button id="copyBtn" style="display:none;">Salin Hasil</button></h2>
+            <div id="hasilProposal"></div>
+            <button id="startOverBtn" class="main-button" style="background-color:#dc3545; margin-top:20px;">Mulai Lagi dari Awal</button>
+        </div>
+    </div>
+
+    <script>
+        let appContext = {};
+
+        // --- Event Listeners Setup ---
+        document.getElementById('formTahap1').addEventListener('submit', handleTahap1Submit);
+        document.getElementById('cariMasalahLainBtn').addEventListener('click', fetchAndDisplayProblems);
+        document.getElementById('pilihMasalahBtn').addEventListener('click', handleMasalahSelection);
+        document.getElementById('cariSolusiLainBtn').addEventListener('click', fetchAndDisplaySolutions);
+        document.getElementById('pilihSolusiBtn').addEventListener('click', handleSolusiSelection);
+        document.getElementById('copyBtn').addEventListener('click', copyToClipboard);
+        document.getElementById('startOverBtn').addEventListener('click', () => window.location.reload());
+
+        // --- TAHAP 1 ---
+        function handleTahap1Submit(e) {
+            e.preventDefault();
+            const namaPenyusun = document.getElementById('namaPenyusun').value;
+            const jabatanSpesifik = document.getElementById('jabatanSpesifik').value;
+            const namaInstansi = document.getElementById('namaInstansi').value;
+
+            if (!namaPenyusun || !jabatanSpesifik || !namaInstansi) {
+                alert('Nama Lengkap, Jabatan Spesifik, dan Nama Instansi tidak boleh kosong.');
+                return;
+            }
+            appContext.nama = namaPenyusun;
+            appContext.nip = document.getElementById('nipPenyusun').value;
+            appContext.jabatan = jabatanSpesifik;
+            appContext.tingkatInstansi = document.getElementById('tingkatInstansi').value;
+            appContext.namaInstansi = namaInstansi;
+
+            fetchAndDisplayProblems();
+        }
+
+        async function fetchAndDisplayProblems() {
+            const btn = document.getElementById('cariMasalahBtn');
+            const btnLain = document.getElementById('cariMasalahLainBtn');
+            const continueBtn = document.getElementById('pilihMasalahBtn');
+
+            btn.textContent = 'Mencari Masalah...';
+            btn.disabled = true;
+            btnLain.textContent = 'Mencari...';
+            btnLain.disabled = true;
+            continueBtn.disabled = true;
+            
+            const prompt = `Sebagai ahli manajemen publik di Indonesia, berikan 5 masalah umum yang relevan untuk seorang ASN dengan konteks: Jabatan: ${appContext.jabatan}, Tingkat Instansi: ${appContext.tingkatInstansi}, Tempat Tugas: ${appContext.namaInstansi}. Masalah harus konkret dan bisa diselesaikan dalam skala kecil untuk Aksi Perubahan P3K. Format output HARUS berupa JSON array valid, dengan key "judul" dan "dampak".`;
+            
+            try {
+                const problems = await callGemini(prompt, true);
+                displayProblemChoices(problems);
+                document.getElementById('tahap1_konteks_tugas').style.display = 'none';
+                document.getElementById('tahap2_pilih_masalah').style.display = 'block';
+            } catch (error) {
+                alert(`Gagal mendapatkan ide masalah dari AI: ${error.message}`);
+            } finally {
+                btn.textContent = 'Tampilkan Masalah yang Relevan';
+                btnLain.textContent = 'Cari Ide Masalah Lain';
+                btnLain.disabled = false;
+            }
+        }
+        
+        // --- TAHAP 2 ---
+        function displayProblemChoices(choices) {
+            displayChoices('ideMasalahContainer', choices, (choice, div) => {
+                div.innerHTML = `<strong>${choice.judul}</strong><p class="dampak">Dampak: ${choice.dampak}</p>`;
+                appContext.selectedProblem = choice;
+                document.getElementById('pilihMasalahBtn').disabled = false;
+            });
+        }
+
+        function handleMasalahSelection() {
+            fetchAndDisplaySolutions();
+        }
+
+        async function fetchAndDisplaySolutions() {
+            const btn = document.getElementById('pilihMasalahBtn');
+            const btnLain = document.getElementById('cariSolusiLainBtn');
+            const continueBtn = document.getElementById('pilihSolusiBtn');
+
+            btn.textContent = 'Mencari Solusi...';
+            btn.disabled = true;
+            btnLain.textContent = 'Mencari...';
+            btnLain.disabled = true;
+            continueBtn.disabled = true;
+
+            const prompt = `Untuk masalah "${appContext.selectedProblem.judul}" yang dihadapi oleh seorang ${appContext.jabatan}, berikan 3 gagasan solusi kreatif dan sederhana untuk Aksi Perubahan P3K. Format output HARUS berupa JSON array valid, dengan key "judul" dan "deskripsi".`;
+
+            try {
+                const solutions = await callGemini(prompt, true);
+                displaySolutionChoices(solutions);
+                document.getElementById('tahap2_pilih_masalah').style.display = 'none';
+                document.getElementById('tahap3_pilih_solusi').style.display = 'block';
+            } catch (error) {
+                alert(`Gagal mendapatkan ide solusi: ${error.message}`);
+            } finally {
+                btn.textContent = 'Lanjutkan dengan Masalah Ini';
+                btnLain.textContent = 'Cari Ide Solusi Lain';
+                btnLain.disabled = false;
+            }
+        }
+
+        // --- TAHAP 3 ---
+        function displaySolutionChoices(choices) {
+            displayChoices('ideSolusiContainer', choices, (choice, div) => {
+                div.innerHTML = `<strong>${choice.judul}</strong><p>${choice.deskripsi}</p>`;
+                appContext.selectedSolution = choice;
+                document.getElementById('pilihSolusiBtn').disabled = false;
+            });
+        }
+        
+        async function handleSolusiSelection() {
+            const btn = document.getElementById('pilihSolusiBtn');
+            btn.textContent = 'Menguraikan Rencana...';
+            btn.disabled = true;
+            
+            const prompt = `Anda adalah perencana proyek ahli. Uraikan ide solusi "${appContext.selectedSolution.judul}" menjadi rencana aksi detail untuk seorang ASN. Konteks masalah: "${appContext.selectedProblem.judul}". Hasil harus dalam format JSON valid, dengan key: "judulAksi", "solusiSingkat", "langkahLangkah", "keterkaitanNilai", "sumberDaya".`;
+
+            try {
+                appContext.plan = await callGemini(prompt, true);
+                await generateFinalProposal();
+            } catch (error) {
+                alert(`Gagal menguraikan rencana: ${error.message}`);
+                btn.textContent = 'Uraikan Rencana untuk Solusi Ini';
+                btn.disabled = false;
+            }
+        }
+
+        // --- TAHAP 4 (FINAL) ---
+        async function generateFinalProposal() {
+            const hasilContainer = document.getElementById('hasilContainer');
+            const hasilProposal = document.getElementById('hasilProposal');
+            const copyBtn = document.getElementById('copyBtn');
+
+            document.getElementById('tahap3_pilih_solusi').style.display = 'none';
+            hasilContainer.style.display = 'block';
+            hasilProposal.textContent = 'Finalisasi: AI sedang menyusun draf proposal lengkap...';
+            copyBtn.style.display = 'none';
+            hasilContainer.scrollIntoView({ behavior: 'smooth' });
+            
+            const finalPrompt = `Buatkan Draf Proposal Aksi Perubahan P3K yang lengkap, formal, dan profesional berdasarkan data berikut. Proposal disusun oleh: Nama: ${appContext.nama}, NIP P3K: ${appContext.nip || '-'}, Jabatan: ${appContext.jabatan}, Instansi: ${appContext.namaInstansi}. Judul Aksi Perubahan: ${appContext.plan.judulAksi}. BAB I Pendahuluan (Latar Belakang: masalah "${appContext.selectedProblem.judul}" & dampaknya "${appContext.selectedProblem.dampak}"; Tujuan & Manfaat). BAB II Rancangan (Deskripsi: "${appContext.plan.solusiSingkat}"; Keterkaitan Nilai BerAKHLAK: "${appContext.plan.keterkaitanNilai}"; Tabel Rencana Pelaksanaan dari langkah: "${appContext.plan.langkahLangkah}"; Sumber Daya: "${appContext.plan.sumberDaya}" & Waktu: 1 Bulan). BAB III Penutup (Kesimpulan & Saran).`;
+
+            try {
+                const finalProposalText = await callGemini(finalPrompt, false);
+                hasilProposal.textContent = finalProposalText;
+                copyBtn.style.display = 'inline-block';
+            } catch (error) {
+                hasilProposal.textContent = `Gagal membuat proposal: ${error.message}`;
+            }
+        }
+        
+        // --- UTILITY FUNCTIONS ---
+        async function callGemini(prompt, expectJson = false) {
+            const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+            
+            const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (!response.ok) throw new Error(`API Error: ${response.status} - ${await response.text()}`);
+            const result = await response.json();
+            
+            if (result.candidates?.[0]?.content?.parts?.[0]) {
+                const text = result.candidates[0].content.parts[0].text;
+                if (expectJson) {
+                    try {
+                        return JSON.parse(text.replace(/```json/g, '').replace(/```/g, '').trim());
+                    } catch (e) {
+                        console.error("Failed to parse JSON:", text);
+                        throw new Error("AI memberikan respons format JSON yang tidak valid.");
+                    }
+                }
+                return text;
+            }
+            throw new Error("Respons dari AI tidak valid atau kosong.");
+        }
+
+        function displayChoices(containerId, choices, renderFunc) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '<div class="loader">Memuat pilihan...</div>';
+            if (!choices || choices.length === 0) {
+                 container.innerHTML = 'Gagal memuat pilihan.';
+                 return;
+            }
+            container.innerHTML = '';
+            choices.forEach(choice => {
+                const div = document.createElement('div');
+                div.className = 'choice-item';
+                div.onclick = () => {
+                    document.querySelectorAll(`#${containerId} .choice-item`).forEach(el => el.classList.remove('selected'));
+                    div.classList.add('selected');
+                    renderFunc(choice, div);
+                };
+                renderFunc(choice, div); // Initial render
+                container.appendChild(div);
+            });
+        }
+        
+        function copyToClipboard() {
+            const textToCopy = document.getElementById('hasilProposal').textContent;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = textToCopy;
+            tempTextArea.style.position = 'absolute';
+            tempTextArea.style.left = '-9999px';
+            document.body.appendChild(tempTextArea);
+            
+            tempTextArea.select();
+            tempTextArea.setSelectionRange(0, 99999);
+            
+            try {
+                const successful = document.execCommand('copy');
+                this.textContent = successful ? 'Tersalin!' : 'Gagal!';
+            } catch (err) {
+                console.error('Gagal menyalin teks: ', err);
+                this.textContent = 'Gagal!';
+            }
+            
+            document.body.removeChild(tempTextArea);
+
+            setTimeout(() => { this.textContent = 'Salin Hasil'; }, 2000);
+        }
+    </script>
+</body>
+</html>
+
+
+Dapatkan Microsoft OneNote: https://aka.ms/GetOneNoteMobile
